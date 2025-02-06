@@ -123,7 +123,7 @@ def create_dictionaries(hour_range):
                     "en" : [exact_hour_en[j] + " in the early morning"],
                     "time" : time
                 }
-            if 5 < j < 12 and i == 0:
+            if 5 <= j < 12 and i == 0:
                 day_times_descr3[str(j)+str(i)] = {
                     "gr" : at_gr + exact_hour_gr[j] + " το πρωί",
                     "en" : at_en + exact_hour_en[j] + " in the morning",
@@ -141,13 +141,13 @@ def create_dictionaries(hour_range):
                     "en" : at_en + exact_hour_en[j] + " in the evening",
                     "time" : time
                 }
-            if 16 <= j <= 20 and i == 0:
+            if 16 <= j < 20 and i == 0:
                 day_times_descr3[str(j)+str(i)] = {
                     "gr" : exact_hour_gr[j] + " το απόγευμα",
                     "en" : exact_hour_en[j] + " in the evening",
                     "time" : time
                 }
-            if 20 < j < 24 and i == 0:
+            if 20 <= j < 24 and i == 0:
                 day_times_descr3[str(j)+str(i)] = {
                     "gr" : at_gr + exact_hour_gr[j] + " το βράδυ",
                     "en" : at_en + exact_hour_en[j] + " at night",
@@ -169,7 +169,7 @@ def create_dictionaries(hour_range):
                     "en" : at_en + exact_hour_en[j] + " a.m.",
                     "time" : time
                 }
-            if 12 < j < 24 and i == 0:
+            if 12 <= j <= 24 and i == 0:
                 day_times_descr3[str(j)+str(i)] = {
                     "gr" : "στις " + exact_hour_gr[j] + " μ.μ.",
                     "en" : "at " + exact_hour_en[j] + " p.m.",
@@ -181,19 +181,19 @@ def create_dictionaries(hour_range):
                     "en" : "at quarter past " + exact_hour_en[j] + " am",
                     "time" : time
                 }
-            if 12 < j < 24 and i == 15:
+            if 12 <= j <= 24 and i == 15:
                 day_times_descr3[str(j)+str(i)] = {
                     "gr" : at_gr + exact_hour_gr[j] + " και τέταρτο μετά μεσημβρίας",
                     "en" : at_en + "quarter past " + exact_hour_en[j] + " pm",
                     "time" : time
                 }           
-            if 0 < j < 12 and i == 30:
+            if 0 <= j <= 12 and i == 30:
                 day_times_descr3[str(j)+str(i)] = {
                     "gr" : exact_hour_gr[j] + "μισή πμ",
                     "en" : "at half past " + exact_hour_en[j] + " am",
                     "time" : time
                 }
-            if 12 < j < 24 and i == 30:
+            if 12 < j <= 24 and i == 30:
                 day_times_descr3[str(j)+str(i)] = {
                     "gr" : "στις " + exact_hour_gr[j] + " και 30 μμ",
                     "en" : "at 30 past " + exact_hour_en[j] + " pm",
@@ -221,23 +221,27 @@ def get_time(hour_range=""):
   #return selected_dict[random_key]
   return {'time': selected_dict[random_key], 'selected_time_dictionary': selected_dict, 'selected_time_index': random_key}
 
-def get_end_time(start_time, duration, dictionary, key):
+def get_end_time(start_time, duration, dictionary, selected_index):
     # Parse start_time
     time_format = "%H:%M:%S"
     start_datetime = datetime.strptime(start_time, time_format)
-    
+    #print("start datetime ", start_datetime)
     # Calculate duration in seconds
     duration_seconds = int(duration * 3600)
     
     # Compute the end time
     end_datetime = start_datetime + timedelta(seconds=duration_seconds)
     end_datetime = end_datetime.time().strftime(time_format)
+    
+    #print("dictionary ", dictionary['00'])
+    #print("key ", key)
     # Retrieve record of dictionary on 'time' value
     end_datetime_dict = next((dictionary[key] for key in dictionary if dictionary[key]['time'] == end_datetime), None)
     #print("end datetime")
     #print(end_datetime)
-    #print("end datetime dict")
-    #print(end_datetime_dict)
+    if not end_datetime_dict:
+        end_datetime_dict = {'en':end_datetime[:5],'gr':end_datetime[:5], 'time':end_datetime}
+    #print("end datetime dict size", len(end_datetime_dict))
     # Return formatted end time dictionary with 'time' 'en' 'gr' keys
     return end_datetime_dict
 

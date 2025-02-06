@@ -1,4 +1,5 @@
 import random
+import sys
 from get_date import *
 from get_time import *
 
@@ -87,7 +88,8 @@ class Event:
     end_date: str
     end_time_dict: dict
     end_time: dict
-    rrule: dict
+    rrule: str
+    rrule_dict: dict
     expression: dict
     is_single: bool
     '''
@@ -113,13 +115,18 @@ class Event:
         selected_time_data = get_time()
         self.time = selected_time_data['time']
         self.selected_time_dictionary = selected_time_data['selected_time_dictionary']
+        #print("selected time dictionary ", self.selected_time_dictionary)
         self.selected_time_index = selected_time_data['selected_time_index']
+        #print("selected time index ", self.selected_time_index)
+        #print("self.time['time'] ", self.time['time'])
+        #print("self.event['en']['duration'] ", self.event['en']['duration'])
         self.end_time_dict = get_end_time(self.time['time'], self.event['en']['duration'], self.selected_time_dictionary, self.selected_time_index)
         #print(self.end_time_dict)
         self.end_time = self.end_time_dict['time']
         #print(self.end_time)
         # According to event's data create rrule. Also picks random recurring days. Single events don't have rrule at all.
         self.rrule = self.create_rrule()
+        #print(self.rrule)
         #print(self.rrule)
         # Make human expressions on that rrule if one (Single events don't have rrule)
         if self.rrule: self.expression = self.express_rrule()
@@ -131,9 +138,9 @@ class Event:
                         'gr': self.event['gr']['title']}
         #print(self.summary)
         # Count start date and assign it to start_date
-        if not self.is_single: self.start_date = get_start_date(self.rrule)
+        if not self.is_single: self.start_date = get_start_date(self.rrule_dict)
         #print(self.start_date)
-        self.end_date = get_end_date(self.rrule['UNTIL']) if not self.is_single else self.start_date
+        self.end_date = get_end_date(self.rrule_dict['UNTIL']) if not self.is_single else self.start_date
         
     def create_event(self):
         #print(self.summary)
@@ -291,32 +298,26 @@ class Event:
         Returns:
             dict: Recurrence rule dictionary.
         """
+        #print(self.event)
         if self.event['en']['recurring'] == 'Weekly':
-            rrule = {
-            "FREQ": self.event['en']['recurring'].upper(),
-            "BYDAY": self.select_random_days_of_week(days[days_of_week]),
-            "UNTIL": "20250630T000000Z"
-            }
+            #print("weekly ", self.event['en']['recurring'])
+            #print(type(self.event['en']['recurring']))
+            rrule = "FREQ=" + self.event['en']['recurring'].upper() + \
+            ";BYDAY=" + ','.join(self.select_random_days_of_week(days[days_of_week])) + \
+            ";UNTIL=20250630T000000Z"
         elif self.event['en']['recurring'] == 'Monthly':
-            rrule = {
-            "FREQ": self.event['en']['recurring'].upper(),
-            "BYMONTHDAY": random.randint(1, 28),
-            "UNTIL": "20251231T000000Z"
-            }
+            rrule = "FREQ=" + self.event['en']['recurring'].upper() + \
+            ";BYMONTHDAY=" + str(random.randint(1, 28)) + \
+            ";UNTIL=20251231T000000Z"
         elif self.event['en']['recurring'] == 'Yearly':
-            rrule = {
-            "FREQ": self.event['en']['recurring'].upper(),
-            "BYMONTH": random.randint(1, 12),
-            "BYMONTHDAY": random.randint(1, 28),
-            "UNTIL": "20300101T000000Z"
-            }
+            rrule = "FREQ=" + self.event['en']['recurring'].upper() + \
+            ";BYMONTH=" + str(random.randint(1, 12)) + \
+            ";BYMONTHDAY=" + str(random.randint(1, 28)) + \
+            ";UNTIL=20300101T000000Z"
         elif self.event['en']['recurring'] == 'Single':
             rrule = ""
         else:
-            rrule = {
-            "FREQ": "DAILY",
-            "UNTIL": "20250630T000000Z"
-            }
+            rrule = "FREQ=DAILY;UNTIL=20250630T000000Z"
         
         return rrule
 
@@ -325,17 +326,21 @@ class Event:
         Expresses a recurrence rule in natural language with random syntax
         
         Args:
-            rrule: Dictionary with recurrence rule information
+            rrule: String with recurrence rule information
         
         Returns:
             List of strings with natural language expressions of the recurrence rule
         """
         # Get frequency and byday values
-        
-        if self.rrule["FREQ"] == "WEEKLY":
-            byday = self.rrule.get("BYDAY", [])
+        #print(self.rrule)
+        self.rrule_dict = self.parse_rrule_to_dict()
+        #print("rrule dict ", self.rrule_dict)
+        if self.rrule_dict['FREQ'] == "WEEKLY":
+            byday_str = self.rrule_dict.get("BYDAY", [])
+            byday = [day.strip() for day in byday_str.split(",")] if byday_str else []
         
             # Get full day names
+            #print("byday ", type(byday), byday)
             byday_names_en = [day_names_en[day] for day in byday]
             byday_names_gr = [day_names_gr[day] for day in byday]
             if len(byday_names_en) == 1:
@@ -351,24 +356,50 @@ class Event:
                 prompt_en = add_every_en + ", ".join(byday_names_en[:-1]) + add_and_en + byday_names_en[-1]
                 prompt_gr = add_every_gr + ", ".join(byday_names_gr[:-1]) + add_and_gr + byday_names_gr[-1]
             
-        elif self.rrule["FREQ"] == "MONTHLY":
+        elif self.rrule_dict["FREQ"] == "MONTHLY":
             post_expr_en = [' of each month', ' of every month']
             post_expr_gr = [' του μήνα', ' του μηνός']
             pre_exp_en = ['monthly on the ']
             pre_expr_gr = ['κάθε μήνα στις ']
-            prompt_list_en = ['every ' + str(self.rrule["BYMONTHDAY"]) + random.choice(post_expr_en), 'monthly on the ' + str(self.rrule["BYMONTHDAY"])]
-            prompt_list_gr = 'κάθε ' + str(self.rrule["BYMONTHDAY"]) + random.choice(post_expr_gr), 'κάθε μήνα στις ' + str(self.rrule["BYMONTHDAY"])
+            prompt_list_en = ['every ' + str(self.rrule_dict["BYMONTHDAY"]) + random.choice(post_expr_en), 'monthly on the ' + str(self.rrule_dict["BYMONTHDAY"])]
+            prompt_list_gr = 'κάθε ' + str(self.rrule_dict["BYMONTHDAY"]) + random.choice(post_expr_gr), 'κάθε μήνα στις ' + str(self.rrule_dict["BYMONTHDAY"])
             prompt_en = random.choice(prompt_list_en)
             prompt_gr = random.choice(prompt_list_gr)
-        elif self.rrule["FREQ"] == "YEARLY":
-            prompt_en = 'every year at ' + str(self.rrule["BYMONTHDAY"]) + ' of ' + month_names['en'][str(self.rrule["BYMONTH"])]
-            prompt_gr = 'κάθε χρόνο στις ' + str(self.rrule["BYMONTHDAY"]) + ' ' + month_names['gr'][str(self.rrule["BYMONTH"])]
+        elif self.rrule_dict["FREQ"] == "YEARLY":
+            prompt_en = 'every year at ' + str(self.rrule_dict["BYMONTHDAY"]) + ' of ' + month_names['en'][str(self.rrule_dict["BYMONTH"])]
+            prompt_gr = 'κάθε χρόνο στις ' + str(self.rrule_dict["BYMONTHDAY"]) + ' ' + month_names['gr'][str(self.rrule_dict["BYMONTH"])]
         else:
             prompt_en = 'every day'
             prompt_gr = 'κάθε μέρα'
         
         return {'en': prompt_en, 'gr': prompt_gr}
+    
+    def parse_rrule_to_dict(self):
+        #print(rrule)
         
+        # Irrelevant!! All possible rrule components
+        freq = None
+        interval = None
+        byday = None
+        bymonthday = None
+        bymonth = None
+        byyearday = None
+        count = None
+        until = None
+        rdate = None
+        exdate = None
+         # Split string to its parts
+        parts = self.rrule.split(';')
+        #print("parts", parts)
+        rrule_dict = {}
+        # Loop through the parts and extract the values
+        for part in parts:
+            if '=' in part:
+                key, value = part.split('=', 1)
+                if value.lower() != 'none':
+                    rrule_dict[key] = value
+        return rrule_dict
+
     def select_random_days_of_week(self, weekdays: list[str]) -> list[str]:
         """
         Selects a random subset of days from the input list and returns them

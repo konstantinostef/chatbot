@@ -95,21 +95,23 @@ def get_start_date(given_rrule: dict) -> str:
     if not given_rrule:
         return today
     if given_rrule['FREQ'] == 'WEEKLY' and 'BYDAY' in given_rrule:
-        weekdays = given_rrule['BYDAY']
+        weekdays_str = given_rrule['BYDAY']
+        weekdays = [day.strip() for day in weekdays_str.split(",")] if weekdays_str else []
         today_weekday = today.weekday()
 
         # Convert weekday names to integer values and sort
         target_days = sorted(WEEKDAYS_MAP[day] for day in weekdays if day in WEEKDAYS_MAP)
-
+        #print("weekdays ", weekdays)
         # Find the minimum number of days to add to reach the next target weekday
         days_until_next = min((day - today_weekday) % 7 for day in target_days)
 
         next_date = today + timedelta(days=days_until_next)
     elif given_rrule['FREQ'] == 'MONTHLY' and 'BYMONTHDAY' in given_rrule:
-        next_date = given_rrule['BYMONTHDAY']
+        next_date = int(given_rrule['BYMONTHDAY'])
         # Check if target_day is valid for the current month or February
         if not (1 <= next_date <= 31):
             raise ValueError("Day must be between 1 and 31")
+
 
         # Current month
         month = today.month
@@ -133,7 +135,7 @@ def get_start_date(given_rrule: dict) -> str:
                 next_date -= 1
     elif given_rrule['FREQ'] == 'YEARLY':
         
-        next_date = datetime(year, given_rrule['BYMONTH'], given_rrule['BYMONTHDAY'])
+        next_date = datetime(year, int(given_rrule['BYMONTH']), int(given_rrule['BYMONTHDAY']))
     else:
         next_date = today
 
