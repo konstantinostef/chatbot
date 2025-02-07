@@ -1,4 +1,5 @@
 import random
+import json
 import sys
 from get_date import *
 from get_time import *
@@ -132,7 +133,7 @@ class Event:
         if self.rrule: self.expression = self.express_rrule()
         # Create user prompt. Also picks a random date for single events
         self.prompt = self.get_prompt()
-        #print(self.prompt)
+        #gi(self.prompt)
         # Keep events title as 'summary'
         self.summary = {'en': self.event['en']['title'],
                         'gr': self.event['gr']['title']}
@@ -144,30 +145,35 @@ class Event:
         
     def create_event(self):
         #print(self.summary)
+        print("start date ", self.start_date)
         event_to_return = {}
         event_to_return = {
-            'en': {
-                'summary':self.summary['en'],
-                'start': {
-                    'dateTime': self.start_date + 'T' + self.time['time'] + "+02:00', 'timeZone':'Eastern European Time',"
+            "en": {
+                "summary":self.summary['en'],
+                "start": {
+                    "dateTime":  f"{self.start_date}T{self.time['time']}+02:00", "timeZone":"Europe/Athens",
+                    #'dateTime': str(self.start_date) + 'T' + str(self.time['time']) + "+02:00', 'timeZone':'Europe/Athens',"
                 },
-                'end': {
-                    'dateTime': self.end_date + 'T' + self.end_time + "+02:00', 'timeZone':'Eastern European Time',"
+                "end": {
+                    "dateTime": f"{self.end_date}T{self.end_time}+02:00", "timeZone":"Europe/Athens",
                 },
             },
-            'gr': {
-                'summary':self.summary['gr'],
-                'start': {
-                    'dateTime': self.start_date + 'T' + self.time['time'] + "+02:00', 'timeZone':'Eastern European Time',"
+            "gr": {
+                "summary":self.summary['gr'],
+                "start": {
+                    "dateTime": f"{self.start_date}T{self.time['time']}+02:00", "timeZone":"Europe/Athens",
                 },
-                'end': {
-                    'dateTime': self.end_date + 'T' + self.end_time + "+02:00', 'timeZone':'Eastern European Time',"
+                "end": {
+                    "dateTime": f"{self.end_date}T{self.end_time}+02:00", "timeZone":"Europe/Athens",
                 },
             }
         }
         if not self.is_single:
             event_to_return['en']['recurrence'] = ['RRULE:' + str(self.rrule)]
             event_to_return['gr']['recurrence'] = ['RRULE:' + str(self.rrule)]
+
+        # If i need to use double quotes
+        #return json.dumps(event_to_return)  # But be carefull because now it is not a dictionary. It is a string
         return event_to_return
     
     @classmethod
