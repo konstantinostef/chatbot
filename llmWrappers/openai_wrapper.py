@@ -73,6 +73,6 @@ def chat(message, history):
     response_text = response.choices[0].message.content
     # Write the response to a file
     with open("conversations.txt", "a") as file:
-        json.dump({"User": message}, file, indent=2)
-        json.dump({"assistant": response_text}, file, indent=2)
+        json.dump({"User": message}, file, indent=2, ensure_ascii=False)
+        json.dump({"assistant": response_text}, file, indent=2, ensure_ascii=False)
     return response.choices[0].message.content
