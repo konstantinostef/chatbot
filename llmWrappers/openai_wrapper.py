@@ -31,7 +31,15 @@ system_prompt = """
 You are an assistant working as an entity extractor. When one asks you to create an event for him, you extract entities as start datetime,
 end datetime, summary, recurrence.
 You answer only with a json built on the structure of an iCalendar event. No explanation. No other words.
-Start date of the event will be the first day after today.
+Start date of the event will be the first day after today. For example in the prompt 'every Thursday, Friday and Saturday boxing training at 23 to 12'
+you respond with
+{
+"summary": "boxing training", 
+"start": {"dateTime": "2025-02-13T23:37:00+02:00", 
+            "timeZone": "UTC"}, 
+"end": {"dateTime": "2025-02-13T00:37:00+02:00", 
+        timeZone": "UTC"}, 
+"recurrence": ["RRULE:FREQ=WEEKLY;BYDAY=TH,FR,SA;UNTIL=20250630T000000Z"]}
 """
 system_prompt += f"Today is {today}."
 
@@ -40,7 +48,7 @@ def getUserPrompt(user_prompt):
     prompt = "You are an assistant that creates iCalendar events. Given this prompt:\n"
     prompt += user_prompt
     prompt += "\n you are supposed to return nothing else but a json formatted as a Google Calendar Event with the data given to the prompt."
-    prompt += "\n If some crucial data is missing ask for it."
+    prompt += "\n "
     return prompt
     
 

@@ -141,7 +141,7 @@ class Event:
         # Count start date and assign it to start_date
         if not self.is_single: self.start_date = get_start_date(self.rrule_dict)
         #print(self.start_date)
-        self.end_date = get_end_date(self.rrule_dict['UNTIL']) if not self.is_single else self.start_date
+        self.end_date = self.start_date
         
     def create_event(self):
         #print(self.summary)
@@ -151,20 +151,20 @@ class Event:
             "en": {
                 "summary":self.summary['en'],
                 "start": {
-                    "dateTime":  f"{self.start_date}T{self.time['time']}+02:00", "timeZone":"Europe/Athens",
+                    "dateTime":  f"{self.start_date}T{self.time['time']}+02:00", "timeZone":"UTC",
                     #'dateTime': str(self.start_date) + 'T' + str(self.time['time']) + "+02:00', 'timeZone':'Europe/Athens',"
                 },
                 "end": {
-                    "dateTime": f"{self.end_date}T{self.end_time}+02:00", "timeZone":"Europe/Athens",
+                    "dateTime": f"{self.end_date}T{self.end_time}+02:00", "timeZone":"UTC",
                 },
             },
             "gr": {
                 "summary":self.summary['gr'],
                 "start": {
-                    "dateTime": f"{self.start_date}T{self.time['time']}+02:00", "timeZone":"Europe/Athens",
+                    "dateTime": f"{self.start_date}T{self.time['time']}+02:00", "timeZone":"UTC",
                 },
                 "end": {
-                    "dateTime": f"{self.end_date}T{self.end_time}+02:00", "timeZone":"Europe/Athens",
+                    "dateTime": f"{self.end_date}T{self.end_time}+02:00", "timeZone":"UTC",
                 },
             }
         }

@@ -1,2 +1,5 @@
 __pycache__
 .ipynb_checkpoints
+google_api_credentials.json
+google_desktop_credentials.json
+token.json
